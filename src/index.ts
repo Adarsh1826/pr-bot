@@ -1,6 +1,9 @@
 import fastify from "fastify";
 import dotenv from 'dotenv'
 import {Webhooks} from '@octokit/webhooks'
+import fetchPatch from "./utils/utils";
+import { aiReview,postReview } from "./utils/utils";
+import { Octokit } from "@octokit/rest";
 dotenv.configDotenv()
 const app = fastify()
 const port = parseInt(process.env.PORT!)
@@ -8,11 +11,32 @@ const port = parseInt(process.env.PORT!)
 // webhook
 
 const webhooks = new Webhooks({ secret: process.env.WEBHOOK_SECRET! });
+webhooks.on("pull_request", async ({ payload }) => {
+  if (payload.action === "opened") {
+    const owner = payload.repository.owner.login;
+    const repo = payload.repository.name;
+    const prNumber = payload.pull_request.number;
 
-webhooks.on("pull_request",({payload})=>{
-    console.log(payload);
+    const patches = await fetchPatch({
+      owner,
+      repo,
+      prNumber,
+    });
+
     
-})
+    const reviewText = await aiReview(patches);
+
+   
+    await postReview({
+      owner,
+      repo,
+      prNumber,
+      reviewText,
+    });
+  }
+});
+
+
 
 // health check endpoint
 app.get("/test",(req,res)=>{
@@ -23,26 +47,32 @@ app.get("/test",(req,res)=>{
 
 
 //webhook endpoint
-
-app.post('/webhook', async (req, reply) => {
+app.post("/webhook", async (req, reply) => {
   try {
-    // await webhooks.receive({
-    //   id: req.headers["x-github-delivery"] as string,
-    //   name: req.headers["x-github-event"] as string,
-    //   payload: req.body,
-    //   signature: req.headers["x-hub-signature-256"] as string,
-    // });
+    await webhooks.verifyAndReceive({
+      id: req.headers["x-github-delivery"] as string,
+      name: req.headers["x-github-event"] as string,
+      payload: req.body as string,
+      signature: req.headers["x-hub-signature-256"] as string,
+    });
 
-    reply.code(200).send({ ok: true });
+    reply.send({ ok: true });
   } catch (err) {
     console.error("Webhook error:", err);
-    reply.code(500).send({ error: "Webhook processing failed" });
+    reply.code(401).send({ error: "Invalid webhook" });
   }
 });
 
 
+
 // server listening 
-app.listen({port:port },()=>{
+app.listen({port:port },async()=>{
     console.log(`server is listening on http://localhost:${port}`);
+    const octokit = new Octokit({
+  auth: process.env.GITHUB_TOKEN,
+});
+
+const me = await octokit.users.getAuthenticated();
+console.log("Authenticated as:", me.data.login);
     
 })

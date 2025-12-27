@@ -2,11 +2,18 @@ import fastify from "fastify";
 import dotenv from 'dotenv'
 import {Webhooks} from '@octokit/webhooks'
 import fetchPatch from "./utils/utils.js";
-import { aiReview,postReview } from "./utils/utils.js";
+// import { aiReview,postReview } from "./utils/utils.js";
 import { Octokit } from "@octokit/rest";
+import { aiReview } from "./utils/aiReview.js";
+import {postReview} from "./utils/postReview.js"
+
+
+
+
 dotenv.configDotenv()
 const app = fastify()
 const port = parseInt(process.env.PORT!)
+
 
 // webhook
 
@@ -39,7 +46,7 @@ webhooks.on("pull_request", async ({ payload }) => {
 
 
 // health check endpoint
-app.get("/test",(req,res)=>{
+app.get("/health",(req,res)=>{
     res.send({
         "status":"running"
     })

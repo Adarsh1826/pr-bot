@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "type": "module",
-   "scripts": {
+  "scripts": {
     "build": "tsc -b",
     "dev": "tsc -b && nodemon dist/index.js",
     "start": "node dist/index.js"
@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@octokit/rest": "^22.0.1",
     "@octokit/webhooks": "^14.2.0",
     "dotenv": "^17.2.3",

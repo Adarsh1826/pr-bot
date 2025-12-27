@@ -1,17 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PatchesTypes } from "../types/index.js";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function aiReview(patches: PatchesTypes[]) {
   if (!patches || patches.length === 0) {
     return "## 🤖 AI Review\n\nNo code changes found in this PR.";
   }
 
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-  });
-
+  // Build diff text
   let diffText = "";
   for (const patch of patches) {
     diffText += `
@@ -24,7 +18,7 @@ ${patch.patch ?? "No diff available"}
   const prompt = `
 You are a senior software engineer reviewing a GitHub Pull Request.
 
-Provide:
+Provide the review in GitHub Markdown with:
 1. Summary
 2. Bugs / Issues
 3. Suggestions
@@ -34,13 +28,43 @@ Provide:
 
 Code diff:
 ${diffText}
-  `;
+`;
 
   try {
-    const result = await model.generateContent(prompt);
-    return `## 🤖 AI Review\n\n${result.response.text()}`;
-  } catch (err) {
-    console.error("Gemini error:", err);
-    return "## 🤖 AI Review\n\nError generating review (check Gemini config)";
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const aiText =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ??
+      "AI review could not be generated.";
+
+    return `## 🤖 AI Review\n\n${aiText}`;
+  } catch (error) {
+    console.error("Gemini fetch error:", error);
+
+    return `## 🤖 AI Review
+
+❌ Failed to generate AI review. Please check Gemini API key or quota.`;
   }
 }

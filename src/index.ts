@@ -84,5 +84,6 @@ app.listen({ port: port, host: "0.0.0.0" },async()=>{
     })
     const me = await octokit.rest.users.getAuthenticated();
     //console.log(me);
+    console.log("hello from adarsg");
     
 })

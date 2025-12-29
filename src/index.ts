@@ -2,7 +2,6 @@ import fastify from "fastify";
 import dotenv from 'dotenv'
 import {Webhooks} from '@octokit/webhooks'
 import fetchPatch from "./utils/utils.js";
-// import { aiReview,postReview } from "./utils/utils.js";
 import { Octokit } from "@octokit/rest";
 import { aiReview } from "./utils/aiReview.js";
 import {postReview} from "./utils/postReview.js"
@@ -79,6 +78,6 @@ app.listen({ port: port, host: "0.0.0.0" },async()=>{
       auth:process.env.GITHUB_TOKEN
     })
     const me = await octokit.rest.users.getAuthenticated();
-    console.log(me);
+    //console.log(me);
     
 })

@@ -21,7 +21,7 @@ export async function postReview({
       repo,
       pull_number: prNumber,
       body: reviewText,
-      event: "COMMENT", // Non-blocking review
+      event: "COMMENT", 
     });
 
     console.log(`✅ AI review posted on PR #${prNumber}`);

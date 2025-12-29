@@ -59,6 +59,7 @@ app.post("/webhook", async (req, reply) => {
       Buffer.isBuffer(req.body)
         ? req.body.toString("utf8")
         : JSON.stringify(req.body);
+        reply.send({ ok: true });
     await webhooks.verifyAndReceive({
       id: req.headers["x-github-delivery"] as string,
       name: req.headers["x-github-event"] as string,
@@ -66,7 +67,7 @@ app.post("/webhook", async (req, reply) => {
       signature: req.headers["x-hub-signature-256"] as string,
     });
 
-    reply.send({ ok: true });
+    
   } catch (err) {
     console.error("Webhook error:", err);
     reply.code(401).send({ error: "Invalid webhook" });

@@ -24,38 +24,3 @@ export default async function fetchPatch({owner,repo,prNumber}:PullRequestFetchT
     }
     return patches
 }
-
-export async function aiReview(patches: PatchesTypes[]) {
-  let review = "AI Review\n\n";
-
-  for (let i = 0; i < patches.length; i++) {
-    const patch = patches[i];
-
-    review += `File: ${patch.filename}\n`;
-    review += `Changes:\n`;
-    review += `${patch.patch}\n\n`;
-  }
-
- 
-  return review;
-}
-
-
-export async function postReview({
-  owner,
-  repo,
-  prNumber,
-  reviewText,
-}: PostReviewTypes) {
-  const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN,
-  });
-
-  await octokit.pulls.createReview({
-    owner,
-    repo,
-    pull_number: prNumber,
-    body: reviewText,
-    event: "COMMENT",
-  });
-}

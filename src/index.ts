@@ -2,7 +2,6 @@ import fastify from "fastify";
 import dotenv from 'dotenv'
 import {Webhooks} from '@octokit/webhooks'
 import fetchPatch from "./utils/utils.js";
-// import { aiReview,postReview } from "./utils/utils.js";
 import { Octokit } from "@octokit/rest";
 import { aiReview } from "./utils/aiReview.js";
 import {postReview} from "./utils/postReview.js"
@@ -56,14 +55,19 @@ app.get("/health",(req,res)=>{
 //webhook endpoint
 app.post("/webhook", async (req, reply) => {
   try {
+    const payload =
+      Buffer.isBuffer(req.body)
+        ? req.body.toString("utf8")
+        : JSON.stringify(req.body);
+        reply.send({ ok: true });
     await webhooks.verifyAndReceive({
       id: req.headers["x-github-delivery"] as string,
       name: req.headers["x-github-event"] as string,
-      payload: req.body as string,
+      payload,
       signature: req.headers["x-hub-signature-256"] as string,
     });
 
-    reply.send({ ok: true });
+    
   } catch (err) {
     console.error("Webhook error:", err);
     reply.code(401).send({ error: "Invalid webhook" });
@@ -73,12 +77,16 @@ app.post("/webhook", async (req, reply) => {
 
 
 // server listening 
-app.listen({port:port },async()=>{
+app.listen({ port: port, host: "0.0.0.0" },async()=>{
     console.log(`server is listening on http://localhost:${port}`);
     const octokit = new Octokit({
       auth:process.env.GITHUB_TOKEN
     })
     const me = await octokit.rest.users.getAuthenticated();
+<<<<<<< HEAD
     console.log(me,"khushi the adarsh love");
-    
+=======
+    //console.log(me);
+>>>>>>> upstream/main
+    console.log("jljdflkjsdlkfjsdlk")
 })

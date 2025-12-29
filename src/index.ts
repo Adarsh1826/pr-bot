@@ -82,6 +82,6 @@ app.listen({ port: port, host: "0.0.0.0" },async()=>{
       auth:process.env.GITHUB_TOKEN
     })
     const me = await octokit.rest.users.getAuthenticated();
-    //console.log(me);
+    console.log(me);
     
 })

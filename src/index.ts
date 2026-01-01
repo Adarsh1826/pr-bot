@@ -158,37 +158,27 @@ app.get("/health", (req, res) => {
 });
 
 // Webhook endpoint
-// app.post("/webhook", async (req, reply) => {
-//   try {
-//     const payload = Buffer.isBuffer(req.body)
-//       ? req.body.toString("utf8")
-//       : JSON.stringify(req.body);
-
-//     console.log("/webhook endpoint hit");
-
-//     await webhooks.verifyAndReceive({
-//       id: req.headers["x-github-delivery"] as string,
-//       name: req.headers["x-github-event"] as string,
-//       payload,
-//       signature: req.headers["x-hub-signature-256"] as string,
-//     });
-
-//     reply.send({ ok: true });
-//   } catch (err) {
-//     console.error("Webhook verification error:", err);
-//     reply.code(401).send({ error: "Invalid webhook" });
-//   }
-// });
 app.post("/webhook", async (req, reply) => {
   try {
-    console.log("Webhook payload received:", req.body);
+    const payload = Buffer.isBuffer(req.body)
+      ? req.body.toString("utf8")
+      : JSON.stringify(req.body);
+
+    console.log("/webhook endpoint hit");
+
+    await webhooks.verifyAndReceive({
+      id: req.headers["x-github-delivery"] as string,
+      name: req.headers["x-github-event"] as string,
+      payload,
+      signature: req.headers["x-hub-signature-256"] as string,
+    });
+
     reply.send({ ok: true });
   } catch (err) {
-    console.error("Webhook error:", err);
-    reply.code(500).send({ error: "Error" });
+    console.error("Webhook verification error:", err);
+    reply.code(401).send({ error: "Invalid webhook" });
   }
 });
-
 
 // Server listening
 app.listen({ port: port, host: "0.0.0.0" }, async () => {

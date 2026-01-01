@@ -1,26 +1,37 @@
-import { PullRequestFetchTyes ,PatchesTypes,PostReviewTypes } from "../types/index.js";
-import { Octokit } from "@octokit/rest";
+import type { PullRequestFetchTyes, PatchesTypes } from "../types/index.js";
+import type { githubapp } from "../auth/auth.js";
 
-export default async function fetchPatch({owner,repo,prNumber}:PullRequestFetchTyes) {
-    const octokit = new Octokit({
-        auth:process.env.GITHUB_TOKEN
-    })
-    const files = await octokit.pulls.listFiles({
-        owner,
-        repo, 
-        pull_number: prNumber,
-    })
+// Make octokit part of the input
+interface FetchPatchProps extends PullRequestFetchTyes {
+  octokit: Awaited<ReturnType<typeof githubapp.getInstallationOctokit>>;
+}
 
-    const patches:PatchesTypes[] = [];
-
-    for(let i=0;i<files.data.length;i++){
-        const file = files.data[i];
-        if(file.patch){
-            patches.push({
-                filename:file.filename,
-                patch:file.patch
-            })
-        }
+export default async function fetchPatch({
+  owner,
+  repo,
+  prNumber,
+  octokit,
+}: FetchPatchProps) {
+  // Use octokit.request() for GitHub App compatibility
+  const { data: files } = await octokit.request(
+    "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+    {
+      owner,
+      repo,
+      pull_number: prNumber,
     }
-    return patches
+  );
+
+  const patches: PatchesTypes[] = [];
+
+  for (const file of files) {
+    if (file.patch) {
+      patches.push({
+        filename: file.filename,
+        patch: file.patch,
+      });
+    }
+  }
+
+  return patches;
 }

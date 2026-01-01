@@ -1,15 +1,16 @@
+import dotenv from "dotenv";
+dotenv.config();
 import fastify from "fastify";
-import dotenv from 'dotenv'
+
 import {Webhooks} from '@octokit/webhooks'
 import fetchPatch from "./utils/utils.js";
 import { Octokit } from "@octokit/rest";
 import { aiReview } from "./utils/aiReview.js";
 import {postReview} from "./utils/postReview.js"
+import { githubapp } from "./auth/auth.js";
 
 
 
-
-dotenv.configDotenv()
 const app = fastify()
 const port = parseInt(process.env.PORT!)
 
@@ -22,11 +23,13 @@ webhooks.on("pull_request", async ({ payload }) => {
     const owner = payload.repository.owner.login;
     const repo = payload.repository.name;
     const prNumber = payload.pull_request.number;
-
+    const installationId = payload.installation?.id;
+     const octokit = await githubapp.getInstallationOctokit(installationId!);
     const patches = await fetchPatch({
       owner,
       repo,
       prNumber,
+      octokit
     });
 
     
@@ -38,6 +41,8 @@ webhooks.on("pull_request", async ({ payload }) => {
       repo,
       prNumber,
       reviewText,
+      
+      octokit
     });
   }
 });
@@ -79,10 +84,16 @@ app.post("/webhook", async (req, reply) => {
 // server listening 
 app.listen({ port: port, host: "0.0.0.0" },async()=>{
     console.log(`server is listening on http://localhost:${port}`);
-    const octokit = new Octokit({
-      auth:process.env.GITHUB_TOKEN
-    })
-    const me = await octokit.rest.users.getAuthenticated();
-    //console.log(me);
+    // const octokit = new Octokit({
+    //   auth:process.env.GITHUB_TOKEN
+    // })
+    // const me = await octokit.rest.users.getAuthenticated();
+    // //console.log(me);
     
+    const octokit = await githubapp.getInstallationOctokit(
+  Number(process.env.INSTALLATION_ID)
+);
+
+const res = await octokit.request("GET /app");
+//console.log("APP AUTH OK:", res.data?.slug ||"");
 })

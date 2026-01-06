@@ -5,22 +5,11 @@ import { githubapp } from "../auth/auth.js";
 import fetchPatch from "../utils/utils.js";
 import { aiReview } from "../utils/aiReview.js";
 import { postReview } from "../utils/postReview.js";
-import { error, log } from "console";
-import { reviewQueue } from "../queue/queue.js";
 
-
-export const worker1 = new Worker(
-
-    
+const worker1 = new Worker(
     "pr-review",
     async (job) => {
-
-       
-
-        
         const { owner, repo, prNumber, installationId } = job.data
-
-        console.log(job.data)
 
         const octokit = await githubapp.getInstallationOctokit(installationId)
 
@@ -55,14 +44,3 @@ export const worker1 = new Worker(
     
 )
 
-worker1.on("active",()=>{
-     console.log("wokere started");
-        console.log(reviewQueue.getActiveCount())
-    console.log("Wokere is working");
-    
-})
-
-worker1.on("error",(error)=>{
-    console.log(error);
-    
-})

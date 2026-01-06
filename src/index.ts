@@ -9,6 +9,7 @@ import { postReview } from "./utils/postReview.js";
 import { githubapp } from "./auth/auth.js";
 
 import { reviewQueue } from "./queue/queue.js";
+import { worker1 } from "./worker/worker.js";
 
 
 const app = fastify();
@@ -44,7 +45,7 @@ webhooks.on("pull_request", async ({ payload }) => {
       console.log("Octokit instance created for installation ID", installationId);
 
       await reviewQueue.add(
-        "review-pr",{
+        "pr-review",{
           owner,
           repo,
           prNumber,
@@ -98,4 +99,6 @@ app.post("/webhook", async (req, reply) => {
 // Server listening
 app.listen({ port: port, host: "0.0.0.0" }, async () => {
   console.log(`Server is listening on http://localhost:${port}`);
+
+  console.log(await reviewQueue.getWaiting())
 });

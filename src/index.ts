@@ -47,6 +47,7 @@ webhooks.on("pull_request", async ({ payload }) => {
           prNumber,
           installationId
         },{
+           jobId: `${owner}/${repo}#${prNumber}`,
           removeOnComplete:true,
           removeOnFail:false
         }

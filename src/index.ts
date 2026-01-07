@@ -27,7 +27,7 @@ webhooks.on("pull_request", async ({ payload }) => {
   console.log("Action:", payload.action);
  // console.log("Installation ID:", payload.installation?.id);
 
-  if (payload.action === "opened") {
+  if (payload.action === "opened" || payload.action=="reopened") {
     try {
       const owner = payload.repository.owner.login;
       const repo = payload.repository.name;

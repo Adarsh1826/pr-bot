@@ -9,7 +9,7 @@ import { postReview } from "./utils/postReview.js";
 import { githubapp } from "./auth/auth.js";
 
 import { reviewQueue } from "./queue/queue.js";
-import { worker1 } from "./worker/worker.js";
+import { startPRReviewWorker } from "./worker/worker.js";
 
 
 const app = fastify();
@@ -94,7 +94,7 @@ app.post("/webhook", async (req, reply) => {
   }
 });
 
-
+ startPRReviewWorker()
 
 // Server listening
 app.listen({ port: port, host: "0.0.0.0" }, async () => {

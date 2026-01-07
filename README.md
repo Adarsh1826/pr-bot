@@ -100,9 +100,7 @@ Before opening a PR, please read:
 
 ---
 
-## 📄 License
 
-MIT License
 
 ---
 

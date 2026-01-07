@@ -7,6 +7,7 @@ import fetchPatch from "./utils/utils.js";
 import { aiReview } from "./utils/aiReview.js";
 import { postReview } from "./utils/postReview.js";
 import { githubapp } from "./auth/auth.js";
+import { startPRReviewWorker } from "./worker/worker.js";
 
 const app = fastify();
 const port = parseInt(process.env.PORT!);
@@ -87,6 +88,9 @@ app.post("/webhook", async (req, reply) => {
     reply.code(401).send({ error: "Invalid webhook" });
   }
 });
+
+
+startPRReviewWorker()
 
 // Server listening
 app.listen({ port: port, host: "0.0.0.0" }, async () => {

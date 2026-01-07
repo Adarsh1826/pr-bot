@@ -7,10 +7,7 @@ import fetchPatch from "./utils/utils.js";
 import { aiReview } from "./utils/aiReview.js";
 import { postReview } from "./utils/postReview.js";
 import { githubapp } from "./auth/auth.js";
-
-import { reviewQueue } from "./queue/queue.js";
 import { startPRReviewWorker } from "./worker/worker.js";
-
 
 const app = fastify();
 const port = parseInt(process.env.PORT!);
@@ -44,19 +41,17 @@ webhooks.on("pull_request", async ({ payload }) => {
       const octokit = await githubapp.getInstallationOctokit(installationId);
       console.log("Octokit instance created for installation ID", installationId);
 
-      await reviewQueue.add(
-        "pr-review",{
-          owner,
-          repo,
-          prNumber,
-          installationId
-        },{
-          jobId: `${payload.repository.full_name}#${prNumber}@${payload.pull_request.head.sha}`,
-          attempts: 3,
-          removeOnComplete: true,
-        }
-      )
-      console.log("Job queued successfully")
+      // Fetch patches
+      const patches = await fetchPatch({ owner, repo, prNumber, octokit });
+      console.log(`Fetched ${patches.length} file(s) with changes from PR #${prNumber}`);
+
+      // Generate AI review
+      const reviewText = await aiReview(patches);
+      console.log("AI review generated");
+
+      // Post review
+      await postReview({ owner, repo, prNumber, reviewText, octokit });
+      console.log(`Review posted successfully on PR #${prNumber}`);
     } catch (err) {
       console.error("Error handling pull_request event:", err);
     }
@@ -94,11 +89,10 @@ app.post("/webhook", async (req, reply) => {
   }
 });
 
- startPRReviewWorker()
+
+startPRReviewWorker()
 
 // Server listening
 app.listen({ port: port, host: "0.0.0.0" }, async () => {
   console.log(`Server is listening on http://localhost:${port}`);
-
-  console.log(await reviewQueue.getWaiting())
 });
